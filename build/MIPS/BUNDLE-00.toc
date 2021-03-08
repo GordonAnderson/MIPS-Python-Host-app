@@ -1,0 +1,3 @@
+([('MIPS',
+   '/Users/GAA/GAACE/Products/MIPS/MIPSapp/py/MIPS/dist/MIPS',
+   'EXECUTABLE')],)
