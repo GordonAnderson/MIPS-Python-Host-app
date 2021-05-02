@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['MIPS.py'],
-             pathex=['/Users/GAA/GAACE/Products/MIPS/MIPSapp/py/MIPS', '/Users/GAA/GAACE/Products/MIPS/MIPSapp/py/MIPS'],
+             pathex=['/Users/gordonanderson/GAACE/Products/MIPS/MIPSapp/py/MIPS', '/Users/gordonanderson/GAACE/Products/MIPS/MIPSapp/py/MIPS'],
              binaries=[('/Library/Frameworks/Python.framework/Versions/3.7/lib/libtcl8.6.dylib', 'tcl'), ('/Library/Frameworks/Python.framework/Versions/3.7/lib/libtk8.6.dylib', 'tk')],
              datas=[],
              hiddenimports=[],

@@ -65,6 +65,8 @@ class Uploader:
         self._file_size = os.fstat(fd.fileno()).st_size
         bytes_written = 0
         self.cp.cp.write(bytearray("JTAG\n".encode()))
+        self.cp.cp.timeout = 2.0
+        self.cp.cp.write_timeout = 2.0
         while True:
             line = self.cp.cp.readline().strip()
             if not line:
@@ -76,8 +78,12 @@ class Uploader:
                 xsvf_data = fd.read(num_bytes)
                 bytes_written += len(xsvf_data)
                 self.update_hashes(xsvf_data)
-                self.cp.cp.write(xsvf_data)
-                self.cp.cp.write(0xff * (num_bytes - len(xsvf_data)))
+                try:
+                    self.cp.cp.write(xsvf_data)
+                    self.cp.cp.write(0xff * (num_bytes - len(xsvf_data)))
+                except:
+                    continue
+                    #return self.error_code == 0
                 if self.debug > 1:
                     self.p.print('\rSent: %8d bytes, %8d remaining' % \
                           (bytes_written, self._file_size - bytes_written),
