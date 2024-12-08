@@ -19,6 +19,8 @@ from tkinter import messagebox
 from tkinter import simpledialog
 import os
 import sys
+import platform
+import threading
 import time
 
 # this applications imports
@@ -33,8 +35,7 @@ import RFdriver
 import System
 import PSG
 import JTAG
-
-global tabControl
+import ControlPanel
 
 class Properties:
     def __init__(self, parent):
@@ -46,7 +47,6 @@ class Properties:
         self.MinMIPS = 0
         self.UpdateSecs = 3
         self.MIPS_TCPIP = []
-        self.MIPS_TCPIP.clear()
     def Show(self):
         self.properties = tk.Toplevel()
         self.properties.config(bg="gray98")
@@ -103,11 +103,15 @@ class Properties:
 # MIPS application main data object
 class MIPS:
     def __init__(self, parent):
-        self.Version = "MIPS, Version 0.1, July 17, 2020"
+        self.Version = "MIPS, Version 0.5, April 12, 2022"
         self.master = parent
         self.master.geometry('800x650')
         self.master.resizable(0, 0)
         self.master.title(self.Version)
+        self.scrpt = None
+        self.locals = None
+        self.cpanel = None
+        self.OP = platform.system()
         self.Systems = []
         self.cp = Comms.Comm(self.master)
         # determine if application is a script file or frozen exe
@@ -122,6 +126,34 @@ class MIPS:
         self.statusbar.pack(side=tk.BOTTOM, fill=tk.X)
         self.statusbarMessage(" MIPS app initalizing...", 2000)
         self.properties = Properties(parent)
+    def SendMessage(self, mname, mess):
+        for s in self.Systems:
+            if s.MIPSname == mname:
+                return s.SendMessage(mess)
+        return None
+    def SendCommand(self, mname, mess):
+        for s in self.Systems:
+            if s.MIPSname == mname:
+                return s.SendCommand(mess)
+        return None
+    def findFile(self,fname, path):
+        # This function will look for the file name that is passed.
+        # The file description is used as is first, then with the path
+        # then the app path
+#        return fname;
+        # this needs work, its locks up system
+        if not os.path.isdir(path): path = os.path.dirname(path)
+        if(os.path.exists(fname)): return fname
+        for root, dirs, files in os.walk(path):
+            if fname in files:
+                return os.path.join(root, fname)
+        for root, dirs, files in os.walk(os.getcwd()):
+            if fname in files:
+                return os.path.join(root, fname)
+        for root, dirs, files in os.walk(self.application_path):
+            if fname in files:
+                return os.path.join(root, fname)
+        return None
     def findMIPScp(self,MIPSname):
         for cp in self.Systems:
             if cp.MIPSname == MIPSname: return (cp)
@@ -140,11 +172,10 @@ def main():
             menubar.entryconfig("Terminal", state="normal")
             # Terminal tab selected. If comm port is open start processing characters
             if mips.cp.isOpen:
-                terminal.stopRequest = False
-                root.after(100, terminal.commLoop)
+                terminal.open()
         else:
             menubar.entryconfig("Terminal", state="disable")
-            terminal.stopRequest = True
+            terminal.close()
             terminal.RepeatCmd = ""
         if curTab == 'DCBias': dcbias.open()
         else: dcbias.close()
@@ -183,8 +214,10 @@ def main():
         gh.show()
 
     def scriptingMenuSelect():
-        scp = Scripting.Script(root, globals())
-        scp.show()
+        if mips.scrpt == None:
+            mips.scrpt = Scripting.Script(root, mips.locals)
+            mips.scrpt.show()
+        mips.scrpt.hide(False)
 
     def sendMIPSfile():
         MsgBox = tk.messagebox.askquestion('Send MIPS file',  'This function will send the file you select on the local system ' + \
@@ -289,8 +322,29 @@ def main():
         jtag = JTAG.Uploader(terminal, mips.cp, 2)
         jtag.upload_one_file(localFile)
 
+    def LoadConfiguration():
+        localFile = filedialog.askopenfilename(initialdir=mips.application_path, title="Select Control Panel Configuration file",filetypes = (("xsvf file","*.cfg"),("all files","*.*")))
+        if localFile == '': return
+        selectTabName(tabControl, "System")
+        root.withdraw()
+        mips.cpanel = ControlPanel.ControlPanel(None,localFile,mips)
+        mips.cpanel.open()
+
+
     # Create the main dialog and the main mips data object
     root = tk.Tk()
+    #root.iconbitmap('/Users/gordonanderson/GAACE/Products/MIPS/MIPSapp/py/MIPS/GAACElogo.ico')
+    if (sys.platform.startswith('win')):
+        root.iconbitmap('/Users/gordonanderson/Desktop/GAACE/Products/MIPS/MIPSapp/py/MIPS/GAACElogo.ico')
+    else:
+        logo = tk.PhotoImage(file='/Users/gordonanderson/Desktop/GAACE/Products/MIPS/MIPSapp/py/MIPS/GAACElogo.png')
+        root.call('wm', 'iconphoto', root._w, logo)
+    # to minimize, root.wm_state('iconic')
+    # to restore, root.state('normal')
+    # to call on exit, root.protocol("WM_DELETE_WINDOW", on_closing)
+    # to delect, root.destroy()
+    # to hide, root.withdraw()
+    # to un-hide, root.deiconify()
     mips = MIPS(root)
 
     tabControl = ttk.Notebook(root)
@@ -349,7 +403,7 @@ def main():
     toolsmenu.add_command(label="Save current MIPS firmware", command=readfirmwareCallBack)
     toolsmenu.add_command(label="Set bootloaded boot flag", command=bootflagCallBack)
     toolsmenu.add_separator()
-    toolsmenu.add_command(label="Load configuration", command=donothing)
+    toolsmenu.add_command(label="Load configuration", command=LoadConfiguration)
     toolsmenu.add_separator()
     toolsmenu.add_command(label="Scripting", command=scriptingMenuSelect)
     menubar.add_cascade(label="Tools", menu=toolsmenu)
@@ -364,6 +418,7 @@ def main():
     root.config(menu=menubar)
 
     # Startup the system!
+    mips.locals = locals()
     root.mainloop()
 
 if __name__ == "__main__":

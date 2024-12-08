@@ -85,7 +85,7 @@ class System:
         for port in ports:
             self.mips.statusbarMessage('Trying port: ' + port)
             self.parent.update()
-            cp = Comms.Comm(root)
+            cp = Comms.Comm(self.parent)
             cp.port = port
             cp.open()
             if cp.isOpen:
@@ -103,7 +103,7 @@ class System:
             self.identifyMIPS(cp)
             self.mips.cp = cp
         else:
-            self.mips.cp = Comms.Comm(root)
+            self.mips.cp = Comms.Comm(self.parent)
         return
     def DisconnectMessage(self):
         self.txtMIPSnotes.config(state='normal')

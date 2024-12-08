@@ -18,6 +18,7 @@ class DCBchannel:
         self.master = parent
         self.name = name
         self.MIPSname = MIPSname
+        self.kind = 'DCBchannel'
         self.channel = channel
         self.units = units
         self.cp = comm
@@ -26,6 +27,7 @@ class DCBchannel:
         self.activeVoltage = 0.0
         self.currentV = 0.0
         self.linkedDCB = []
+        self.delta = 1.0
         # get background color from parent if avalible
         try: bg = self.master.cget('bg')
         except: bg ="gray92"
@@ -34,19 +36,19 @@ class DCBchannel:
         self.lblName = tk.Label(self.frame, text=self.name, bg=bg)
         self.lblName.place(x=0,y=0)
         Util.CreateToolTip(self.lblName, self.MIPSname + " Channel " + str(self.channel))
-        self.entDCBchan = tk.Entry(self.frame, width = 10, bd =0, relief=tk.FLAT)
-        self.entDCBchan.place(x=100,y=0)
+        self.entDCBchan = tk.Entry(self.frame, width = 7, bd =0, relief=tk.FLAT)
+        self.entDCBchan.place(x=80,y=0)
         self.entDCBchan.bind("<Return>", self.EntryChange)
         self.entDCBchan.bind("<FocusOut>", self.EntryChange)
         self.entDCBchan.bind("<Up>", self.UpArrow)
         self.entDCBchan.bind("<Down>", self.DownArrow)
         reg = self.entDCBchan.register(self.KeyCheck)
         self.entDCBchan.config(validate="key",validatecommand=(reg, '%P'))
-        self.entRB = tk.Entry(self.frame, width = 10, bd =0,disabledforeground='black', relief=tk.FLAT)
-        self.entRB.place(x=200,y=0)
+        self.entRB = tk.Entry(self.frame, width = 7, bd =0,disabledforeground='black', relief=tk.FLAT)
+        self.entRB.place(x=155,y=0)
         self.entRB.config(state='disabled')
         self.lblUnits = tk.Label(self.frame, text=self.units , bg=bg)
-        self.lblUnits.place(x=300,y=0)
+        self.lblUnits.place(x=230,y=0)
         self.readCMD = "GDCB," + str(self.channel)
         self.writeCMD = "SDCB," + str(self.channel) + ","
         self.readRB = "GDCBV," + str(self.channel)
@@ -62,6 +64,7 @@ class DCBchannel:
         if input[-1:].isdigit() or (input[-1:] == "") or (input[-1:] == ".") or (input[-1:] == "-"): return True
         else: return False
     def EntryChange(self, event):
+        if self.cp == None: return
         if self.cp.SendCommand(self.writeCMD + self.entDCBchan.get() + '\n'):
             self.currentV = float(self.entDCBchan.get())
     def UpArrow(self, event):
@@ -75,20 +78,20 @@ class DCBchannel:
         if self.isShutdown: return
         if self.isShutdown: return
         if self.entDCBchan.get() == '': return
-        delta = 1.0
-        if (event.state & 0x01) != 0: delta *= 10
-        elif (event.state & 0x10) != 0: delta /= 10
-        fval = float(self.entDCBchan.get()) + delta
+        mult = 1.0
+        if (event.state & 0x01) != 0: mult *= 10
+        elif (event.state & 0x10) != 0: mult /= 10
+        fval = float(self.entDCBchan.get()) + self.delta * mult
         self.entDCBchan.delete(0, 'end')
         self.entDCBchan.insert(0, '{:.2f}'.format(fval))
         self.EntryChange(None)
     def DownArrow(self, event):
         if self.isShutdown: return
         if self.entDCBchan.get() == '': return
-        delta = -1.0
-        if (event.state & 0x01) != 0: delta *= 10
-        elif (event.state & 0x10) != 0: delta /= 10
-        fval = float(self.entDCBchan.get()) + delta
+        mult = -1.0
+        if (event.state & 0x01) != 0: mult *= 10
+        elif (event.state & 0x10) != 0: mult /= 10
+        fval = float(self.entDCBchan.get()) + self.delta * mult
         self.entDCBchan.delete(0, 'end')
         self.entDCBchan.insert(0, '{:.2f}'.format(fval))
         self.EntryChange(None)
@@ -98,6 +101,7 @@ class DCBchannel:
             verr = abs(self.currentV - float(self.entRB.get()))
             if (verr > 2.0) and (verr > abs(self.currentV / 100.0)): self.entRB.config(disabledbackground="red")
             else: self.entRB.config(disabledbackground="green2")
+        if self.cp == None: return
         res = self.cp.SendMessage(self.readRB + '\n')
         if res=="" or res==None: return
         self.entRB.delete(0,'end')
@@ -158,6 +162,7 @@ class DCBoffset:
         self.master = parent
         self.name = name
         self.MIPSname = MIPSname
+        self.kind = 'DCBoffset'
         self.channel = channel
         self.units = units
         self.cp = comm
@@ -169,14 +174,14 @@ class DCBoffset:
         self.lblName = tk.Label(self.frame, text=self.name, bg=bg)
         self.lblName.place(x=0,y=0)
         Util.CreateToolTip(self.lblName, "Offset/range control " + self.MIPSname)
-        self.entDCBoff = tk.Entry(self.frame, width = 10, bd =0, relief=tk.FLAT)
-        self.entDCBoff.place(x=100,y=0)
+        self.entDCBoff = tk.Entry(self.frame, width = 7, bd =0, relief=tk.FLAT)
+        self.entDCBoff.place(x=80,y=0)
         self.entDCBoff.bind("<Return>", self.EntryChange)
         self.entDCBoff.bind("<FocusOut>", self.EntryChange)
         reg = self.entDCBoff.register(self.KeyCheck)
         self.entDCBoff.config(validate="key",validatecommand=(reg, '%P'))
         self.lblUnits = tk.Label(self.frame, text=self.units , bg=bg)
-        self.lblUnits.place(x=200,y=0)
+        self.lblUnits.place(x=155,y=0)
         self.readCMD = "GDCBOF," + str(self.channel)
         self.writeCMD = "SDCBOF," + str(self.channel) + ","
         # build full name
@@ -191,6 +196,7 @@ class DCBoffset:
         if input[-1:].isdigit() or (input[-1:] == "") or (input[-1:] == ".") or (input[-1:] == "-"): return True
         else: return False
     def EntryChange(self, event):
+        if self.cp == None: return
         self.cp.SendCommand(self.writeCMD + self.entDCBoff.get() + '\n')
     def Update(self):
         MIPSobjects.entryBoxUpdate(self.entDCBoff, self.readCMD + '\n', self.cp)
@@ -227,6 +233,7 @@ class DCBenable:
         self.master = parent
         self.name = name
         self.MIPSname = MIPSname
+        self.kind = 'DCBenable'
         self.cp = comm
         # get background color from parent if avalible
         try: bg = self.master.cget('bg')
@@ -249,8 +256,10 @@ class DCBenable:
             except: pass
             parent = parent.master
     def EntryChange(self):
+        if self.cp == None: return
         self.cp.SendCommand(self.writeCMD + self.state.get() + '\n')
     def Update(self):
+        if self.cp == None: return
         res = self.cp.SendMessage(self.readCMD + '\n')
         if res=="" or res==None: return
         if res == 'ON': self.chkPWR.select()

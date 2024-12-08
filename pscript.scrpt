@@ -1,0 +1,10 @@
+import time
+
+try:
+	while(True):
+		time.sleep(1)
+		mips.cpanel.statusbarMessage("hello")
+		time.sleep(1)
+		mips.cpanel.statusbarMessage("hello agan")
+except:
+	pass

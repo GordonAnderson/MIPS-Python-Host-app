@@ -11,6 +11,7 @@ class DIOchannel:
         self.master = parent
         self.name = name
         self.MIPSname = MIPSname
+        self.kind = 'DIOchannel'
         self.channel = channel
         self.cp = comm
         # get background color from parent if avalible
@@ -37,8 +38,10 @@ class DIOchannel:
             parent = parent.master
     def EntryChange(self):
         if self.channel >= 'Q': return
+        if self.cp == None: return
         self.cp.SendCommand(self.writeCMD + self.state.get() + '\n')
     def Update(self):
+        if self.cp == None: return
         res = self.cp.SendMessage(self.readCMD + '\n')
         if res=="" or res==None: return
         if res == '1': self.chkDIO.select()

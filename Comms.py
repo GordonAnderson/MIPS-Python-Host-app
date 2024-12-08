@@ -182,8 +182,8 @@ class Comm:
         return False
     def isMIPS(self):
         if not self.isOpen: return False
-        res = self.SendMessage("GVER\n")
-        if res.count("Version") > 0: return True
+        self.MIPSver = self.SendMessage("GVER\n")
+        if self.MIPSver.count("Version") > 0: return True
         return False
     def CalculateCRC(self, binarydata):
         generator = 0x1D
@@ -497,9 +497,11 @@ class Terminal:
         self.mipsTerm.insert(tk.END, contents)
     def key_pressed(self,event):
         if(event.char == ""): return
+        if self.cp == None: return
         self.cp.SendString(event.char)
     def key_paste(self,event):
         lines = self.mipsTerm.clipboard_get()
+        if self.cp == None: return
         for c in lines:
             self.cp.SendString(c)
     def key_copy(self,event):
@@ -509,6 +511,7 @@ class Terminal:
     def repeatLoop(self):
         if self.RepeatCmd == "": return
         if self.RepeatCmd == None: return
+        if self.cp == None: return
         if not self.cp.isOpen: return
         #if tabControl.tab(tabControl.select(), "text") != 'Terminal': return
         self.cp.SendString(self.RepeatCmd + "\n")
@@ -522,6 +525,7 @@ class Terminal:
         if self.stopRequest:
             self.stopRequest = False
             return
+        if self.cp == None: return
         self.cp.ProcessSerial()
         if self.cp.rb.numChars() > 0:
             while self.cp.rb.numChars() > 0:
@@ -530,3 +534,8 @@ class Terminal:
             self.mipsTerm.see('end')
         if self.cp.isOpen:
             self.parent.after(100, self.commLoop)
+    def open(self):
+        self.stopRequest = False
+        self.commLoop()
+    def close(self):
+        self.stopRequest = True

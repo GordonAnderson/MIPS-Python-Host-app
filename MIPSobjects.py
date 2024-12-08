@@ -110,6 +110,32 @@ class TextFileWindow:
         # Load file text to window
         if self.filename != "": self.load(self.filename)
 
+class Tab:
+    def __init__(self, parent, name, width, height, x, y):
+        self.tabs = []
+        self.frms = []
+        self.names = []
+        self.master = parent
+        self.name = name
+        try: bg = self.master.cget('bg')
+        except: bg ="gray92"
+        self.frame = tk.Frame(self.master, bg=bg)
+        self.frame.place(x=x,y=y,width=width,height=height)
+        self.tabControl = ttk.Notebook(self.frame,padding=0)
+        #self.tabControl.configure(borderwidth=0)
+    def addTab(self, name):
+        self.frms.append(ttk.Frame(self.tabControl))
+        self.names.append(name)
+        self.tabControl.add(self.frms[-1], text=name)
+        self.tabControl.pack(expand=1, fill="both")
+    def selectTab(self, name, tname):
+        if(name != self.name): return None
+        for i in range(0,len(self.names)):
+            if(tname == ''.join(self.names[i])):
+                return self.frms[i]
+        return None
+
+
 #
 # Custom control object
 #
@@ -137,6 +163,7 @@ class Ccontrol:
         self.name = name
         self.units = units
         self.MIPSname = MIPSname
+        self.kind = 'Ccontrol'
         self.cp = comm
         self.x=x
         self.y=y
@@ -168,7 +195,7 @@ class Ccontrol:
         if self.type == 'LineEdit':
             # If Read back command or set command are empty then its only one lineEdit
             # box, else two.
-            if self.w == -1: w = 100
+            if self.w == -1: w = 80
             if self.setcmd == '' or self.rbcmd == '':
                 # Only 1 entry box
                 self.frame = tk.Frame(self.master, bg=bg)
@@ -177,30 +204,30 @@ class Ccontrol:
                 self.lblName.place(x=0, y=0)
                 if self.units != '':
                     self.lblUnits = tk.Label(self.frame, text=self.units, bg=bg)
-                    self.lblUnits.place(x=w + 100, y=(h-25)/2)
+                    self.lblUnits.place(x=w + 70, y=(h-25)/2)
                 if self.setcmd != '':
-                    self.entVal = tk.Entry(self.frame, width=10, bd=0, relief=tk.FLAT)
+                    self.entVal = tk.Entry(self.frame, width=7, bd=0, relief=tk.FLAT)
                     self.entVal.place(x=w, y=(h-25)/2)
                     self.entVal.bind("<Return>", self.EntryChange)
                     self.entVal.bind("<FocusOut>", self.EntryChange)
                 elif self.rbcmd != '':
-                    self.entRB = tk.Entry(self.frame, width=10, bd=0, disabledforeground='black', relief=tk.FLAT)
-                    self.entRB.place(x=100, y=(h-25)/2)
+                    self.entRB = tk.Entry(self.frame, width=7, bd=0, disabledforeground='black', relief=tk.FLAT)
+                    self.entRB.place(x=80, y=(h-25)/2)
                     self.entRB.config(state='disabled')
             else:
                 self.frame = tk.Frame(self.master, bg=bg)
                 self.frame.place(x=x, y=y, width=350, height=25)
                 self.lblName = tk.Label(self.frame, text=self.name, bg=bg)
                 self.lblName.place(x=0, y=0)
-                self.entVal = tk.Entry(self.frame, width=10, bd=0, relief=tk.FLAT)
-                self.entVal.place(x=100, y=0)
+                self.entVal = tk.Entry(self.frame, width=7, bd=0, relief=tk.FLAT)
+                self.entVal.place(x=80, y=0)
                 self.entVal.bind("<Return>", self.EntryChange)
                 self.entVal.bind("<FocusOut>", self.EntryChange)
-                self.entRB = tk.Entry(self.frame, width=10, bd=0, disabledforeground='black', relief=tk.FLAT)
-                self.entRB.place(x=200, y=0)
+                self.entRB = tk.Entry(self.frame, width=7, bd=0, disabledforeground='black', relief=tk.FLAT)
+                self.entRB.place(x=155, y=0)
                 self.entRB.config(state='disabled')
                 self.lblUnits = tk.Label(self.frame, text=self.units, bg=bg)
-                self.lblUnits.place(x=300, y=0)
+                self.lblUnits.place(x=225, y=0)
             pass
         elif self.type == 'CheckBox':
             if self.w == -1: w = 150

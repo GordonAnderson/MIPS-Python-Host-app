@@ -1,13 +1,77 @@
 import tkinter as tk
+from tkinter import ttk
 from tkinter import filedialog
 import code
 import threading
+import multiprocessing
 import inspect
 import ctypes
 import time
 import queue
 import sys
 import os
+
+class Interpreter(code.InteractiveInterpreter):
+    def write(self, data):
+        print(data)
+
+class ScriptButton:
+    def __init__(self, parent, name, scriptFile, x, y):
+        def aborted():
+            if (self.statusbarMessage != None): self.statusbarMessage('Script aborted...')
+        def scriptButtonPressed():
+            # If script is running as if user wants to kill it!
+            try:
+                if self.thredInterpreter.is_alive():
+                    # ask if user would like to abort the running script
+                    MsgBox = tk.messagebox.askquestion('Abort script',
+                                                       'The script is running, would you like to abort?'
+                                                       , icon='warning')
+                    if MsgBox == 'no': return
+                    _async_raise(self.thredInterpreter.ident, SystemError)
+                    self.master.after(200, aborted)
+                    return
+            except:
+                pass
+            self.readScript()
+            self.executeScript()
+            if(self.statusbarMessage != None): self.statusbarMessage('Script running...')
+        self.master = parent
+        self.name = name
+        self.kind = 'ScriptButton'
+        self.scriptFile = scriptFile
+        self.source = ''
+        self.locals = None
+        self.onUpdate = False
+        self.runOnce = False
+        self.statusbarMessage = None
+        # Create the botton and place on the control panel
+        self.ScriptButton = ttk.Button(self.master, text=self.name, command=scriptButtonPressed)
+        self.ScriptButton.place(x=x, y=y, width=150)
+        # Open file and read the script
+        self.readScript()
+    def runInterpreter(self):
+        try:
+            src = ''.join(self.source)
+            Interpreter(self.locals).runcode(src)
+        except Exception as e:
+            pass
+    def executeScript(self):
+        self.thredInterpreter = threading.Thread(target=self.runInterpreter)
+        self.thredInterpreter.start()
+    def readScript(self):
+        try:
+            with open(self.scriptFile, 'r') as f:
+                self.source = f.readlines()
+        except:
+            pass
+    def Update(self):
+        if(self.runOnce):
+            self.runOnce = False
+            self.executeScript()
+            return
+        if(self.onUpdate):
+            self.executeScript()
 
 class Console(tk.Frame):
     def __init__(self, parent, _locals, exit_callback):
@@ -68,10 +132,6 @@ def _async_raise(tid, exctype):
         ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(tid), None)
         raise SystemError("PyThreadState_SetAsyncExc failed")
 
-class Interpreter(code.InteractiveInterpreter):
-    def write(self, data):
-        print(data)
-
 class Script:
     def __init__(self, parent, locals):
         self.parent = parent
@@ -95,7 +155,10 @@ class Script:
         self.statusbar.configure(text=" Script running...")
         while self.thredInterpreter.is_alive():
             time.sleep(.1)
-            self.parent.update()
+            try:
+                self.parent.update()
+            except:
+                pass
         if self.aborted: self.statusbar.configure(text=" Script aborted")
         else: self.statusbar.configure(text=" Script finished")
         self.aborted = False
@@ -104,8 +167,9 @@ class Script:
             _async_raise(self.thredInterpreter.ident,SystemError)
             self.aborted = True
     def load(self):
-        filename = filedialog.askopenfilename(initialdir=self.application_path, title="Select script file to load",
-                                              filetypes=(("script files", "*.py"), ("all files", "*.*")))
+        #filename = filedialog.askopenfilename(initialdir=self.application_path, title="Select script file to load",
+        #                                      filetypes=[("script files", "*.py *.*"), ("all files", "*.*")])
+        filename = filedialog.askopenfilename(initialdir=self.application_path, title="Select script file to load, .py")
         if filename != "":
             with open(filename, 'r') as file:
                 data = file.read()
@@ -120,7 +184,17 @@ class Script:
                 file.write(self.sourcebox.get("1.0", "end"))
                 file.close()
                 self.application_path = os.path.dirname(os.path.abspath(filename))
+    def hide(self, state):
+        if state:
+            try: self.root.withdraw()
+            except: pass
+        else:
+            try: self.root.deiconify()
+            except: pass
     def show(self):
+        def on_closing():
+            #self.root.destroy()
+            self.hide(True)
         self.root = tk.Toplevel(self.parent)
         self.root.geometry('600x620')
         self.root.resizable(0, 0)
@@ -142,4 +216,5 @@ class Script:
         self.consolebox = tk.Text(self.root, bg="gray95")
         self.consolebox.place(x=0, y=420, width=600, height=180)
         Console(self.consolebox, self.locals, self.consolebox.destroy)
+        self.root.protocol("WM_DELETE_WINDOW", on_closing)
         self.root.mainloop()

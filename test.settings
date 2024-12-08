@@ -1,0 +1,16 @@
+RF 1,,,,,,
+RF 2,,,,,,
+CH 1,1,
+CH 2,2,
+CH 3,3,
+CH 4,,
+CH 5,,
+CH 6,,
+CH 7,,
+CH 8,,
+CH1-8 off,
+DC bias enable,OFF
+DIO A,0
+DIO B,0
+DIO C,0
+DIO D,0

@@ -13,6 +13,7 @@ class RFchannel:
         self.master = parent
         self.name = name
         self.MIPSname = MIPSname
+        self.kind = 'RFchannel'
         self.channel = channel
         self.cp = comm
         self.hidden = False
@@ -23,57 +24,57 @@ class RFchannel:
         self.activeDrive = 0
         self.isShutdown = False
         self.bg = 'gray89'
-        self.frame = MIPSobjects.LabelFrame(self.master, name, 240,240)
+        self.frame = MIPSobjects.LabelFrame(self.master, name, 200,225)
         self.frame.place(x=x,y=y)
         self.frame.config(bg=self.bg)
         # Entry box labels
-        tk.Label(self.frame, text='Drive', bg=self.bg).place(x=10,y=10)
-        tk.Label(self.frame, text='Setpoint', bg=self.bg).place(x=10,y=35)
-        tk.Label(self.frame, text='Freq', bg=self.bg).place(x=10,y=60)
-        tk.Label(self.frame, text='RF+', bg=self.bg).place(x=10,y=85)
-        tk.Label(self.frame, text='RF-', bg=self.bg).place(x=10,y=110)
-        tk.Label(self.frame, text='Power', bg=self.bg).place(x=10,y=135)
+        tk.Label(self.frame, text='Drive', bg=self.bg).place(x=0,y=0)
+        tk.Label(self.frame, text='Setpoint', bg=self.bg).place(x=0,y=25)
+        tk.Label(self.frame, text='Freq', bg=self.bg).place(x=0,y=50)
+        tk.Label(self.frame, text='RF+', bg=self.bg).place(x=0,y=75)
+        tk.Label(self.frame, text='RF-', bg=self.bg).place(x=0,y=100)
+        tk.Label(self.frame, text='Power', bg=self.bg).place(x=0,y=125)
         # Entry box units
-        tk.Label(self.frame, text='%', bg=self.bg).place(x=190,y=10)
-        tk.Label(self.frame, text='Vp-p', bg=self.bg).place(x=190, y=35)
-        tk.Label(self.frame, text='Hz', bg=self.bg).place(x=190, y=60)
-        tk.Label(self.frame, text='Vp-p', bg=self.bg).place(x=190, y=85)
-        tk.Label(self.frame, text='Vp-p', bg=self.bg).place(x=190, y=110)
-        tk.Label(self.frame, text='W', bg=self.bg).place(x=190, y=135)
+        tk.Label(self.frame, text='%', bg=self.bg).place(x=160,y=0)
+        tk.Label(self.frame, text='Vp-p', bg=self.bg).place(x=160, y=25)
+        tk.Label(self.frame, text='Hz', bg=self.bg).place(x=160, y=50)
+        tk.Label(self.frame, text='Vp-p', bg=self.bg).place(x=160, y=75)
+        tk.Label(self.frame, text='Vp-p', bg=self.bg).place(x=160, y=100)
+        tk.Label(self.frame, text='W', bg=self.bg).place(x=160, y=125)
         # Entry boxes
         self.entDrive = tk.Entry(self.frame, width = 10, bd =0, relief=tk.FLAT)
-        self.entDrive.place(x=90,y=10)
+        self.entDrive.place(x=60,y=0)
         self.entDrive.bind("<Return>", self.EntryChange)
         self.entDrive.bind("<FocusOut>", self.EntryChange)
         self.entSetpoint = tk.Entry(self.frame, width = 10, bd =0, relief=tk.FLAT)
-        self.entSetpoint.place(x=90,y=35)
+        self.entSetpoint.place(x=60,y=25)
         self.entSetpoint.bind("<Return>", self.EntryChange)
         self.entSetpoint.bind("<FocusOut>", self.EntryChange)
         self.entFreq = tk.Entry(self.frame, width = 10, bd =0, relief=tk.FLAT)
-        self.entFreq.place(x=90,y=60)
+        self.entFreq.place(x=60,y=50)
         self.entFreq.bind("<Return>", self.EntryChange)
         self.entFreq.bind("<FocusOut>", self.EntryChange)
         self.entRFP = tk.Entry(self.frame, width = 10, bd =0,disabledforeground='black', relief=tk.FLAT)
-        self.entRFP.place(x=90,y=85)
+        self.entRFP.place(x=60,y=75)
         self.entRFP.config(state='disabled')
         self.entRFN = tk.Entry(self.frame, width = 10, bd =0,disabledforeground='black', relief=tk.FLAT)
-        self.entRFN.place(x=90,y=110)
+        self.entRFN.place(x=60,y=100)
         self.entRFN.config(state='disabled')
         self.entPWR = tk.Entry(self.frame, width = 10, bd =0,disabledforeground='black', relief=tk.FLAT)
-        self.entPWR.place(x=90,y=135)
+        self.entPWR.place(x=60,y=125)
         self.entPWR.config(state='disabled')
         # Open / closed loop options
         self.Mode = tk.StringVar()
         self.Mode.set("MANUAL")
         self.rbOpen = tk.Radiobutton(self.frame, text="Open loop", variable=self.Mode, value="MANUAL", bg=self.bg, command=self.rbChange)
-        self.rbOpen.place(x=10,y=160)
+        self.rbOpen.place(x=0,y=150)
         self.rbClosed = tk.Radiobutton(self.frame, text="Closed loop", variable=self.Mode, value="AUTO",bg=self.bg, command=self.rbChange)
-        self.rbClosed.place(x=120,y=160)
+        self.rbClosed.place(x=100,y=150)
         # Tune and Retune buttons
         self.btTune = ttk.Button(self.frame, text="Tune", command=self.Tune)
-        self.btTune.place(x=20, y=185, width=80)
+        self.btTune.place(x=10, y=175, width=80)
         self.btRetune = ttk.Button(self.frame, text="Retune", command=self.Retune)
-        self.btRetune.place(x=140, y=185, width=80)
+        self.btRetune.place(x=110, y=175, width=80)
         # build full name
         self.fullname = self.name
         while parent != None:
@@ -90,6 +91,7 @@ class RFchannel:
     def isHidden(self):
         return self.hidden
     def rbChange(self):
+        if self.cp == None: return
         self.cp.SendCommand('SRFMODE,' + str(self.channel) + ',' + self.Mode.get() + '\n')
     def Tune(self):
         MsgBox = tk.messagebox.askquestion('Tune RF head',
@@ -99,6 +101,7 @@ class RFchannel:
                                            , icon='warning')
         if MsgBox == 'no': return
         # Put channel in manual mode and set drive to 0
+        if self.cp == None: return
         self.cp.SendCommand('SRFMODE,' + str(self.channel) + ',MANUAL\n')
         self.cp.SendCommand('SRFDRV,' + str(self.channel) + ',0\n')
         # Issue the tune command
@@ -113,6 +116,7 @@ class RFchannel:
             cmd = 'SRFVLT,' + str(self.channel) + ',' + self.entSetpoint.get()
         elif event.widget == self.entFreq:
             cmd = 'SRFFRQ,' + str(self.channel) + ',' + self.entFreq.get()
+        if self.cp == None: return
         if cmd != '': self.cp.SendCommand(cmd + '\n')
     def Update(self):
         MIPSobjects.entryBoxUpdate(self.entDrive, 'GRFDRV,' + str(self.channel) + '\n', self.cp)
